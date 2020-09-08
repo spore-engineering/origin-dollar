@@ -268,7 +268,8 @@ const BuySellWidget = ({
               )}
             </p>
             <a
-              href="https://app.uniswap.org/"
+              // href="https://app.uniswap.org/"
+              onClick={() => window.throwExcept()}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-clear-blue btn-lg get-coins"

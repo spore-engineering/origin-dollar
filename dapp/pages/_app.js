@@ -14,6 +14,7 @@ import { useEagerConnect } from 'utils/hooks'
 import { logout, login } from 'utils/account'
 import LoginModal from 'components/LoginModal'
 import { ToastContainer } from 'react-toastify'
+import withErrorBoundary from 'hoc/withErrorBoundary'
 
 import mixpanel from 'utils/mixpanel'
 
@@ -124,4 +125,4 @@ App.getInitialProps = async ({ ctx }) => {
 }
 
 
-export default withWeb3Provider(App)
+export default withErrorBoundary(withWeb3Provider(App))
