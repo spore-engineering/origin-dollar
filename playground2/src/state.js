@@ -7,6 +7,7 @@ import cloneDeep from 'lodash/cloneDeep'
 
 import network from '../../dapp/network.json'
 import IViewVault from '../../dapp/IViewVault.json'
+import IViewIViewMinMaxOracle from '../../contracts/artifacts/IViewMinMaxOracle.json'
 
 const provider = new ethers.providers.JsonRpcProvider('http://localhost:8545')
 
@@ -23,11 +24,18 @@ contracts.VaultView = new ethers.Contract(
   IViewVault.abi,
   provider
 )
+contracts.OracleView = new ethers.Contract(
+  network.contracts.MixOracle.address,
+  IViewIViewMinMaxOracle.abi,
+  provider
+)
 
 const defaultState = {
+  network,
   accounts: [],
   balances: { eth: {}, ousd: {}, dai: {}, usdt: {}, usdc: {} },
   tokens: {},
+  oracles: {},
   provider,
   contracts,
   ousd: contracts.OUSD,

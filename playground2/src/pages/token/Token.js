@@ -19,6 +19,11 @@ const Token = ({ style }) => {
       const name = await contract.name()
       const symbol = await contract.symbol()
       const totalSupply = await contract.totalSupply()
+      let priceMin, priceMax
+      if (token !== 'OUSD') {
+        priceMin = await contracts.OracleView.priceMin(token)
+        priceMax = await contracts.OracleView.priceMax(token)
+      }
 
       decimals = typeof decimals === 'number' ? decimals : decimals.toNumber()
 
@@ -31,7 +36,9 @@ const Token = ({ style }) => {
           decimals,
           name,
           symbol,
-          totalSupply: ethers.utils.formatUnits(totalSupply, decimals)
+          totalSupply: ethers.utils.formatUnits(totalSupply, decimals),
+          priceMin: priceMin ? ethers.utils.formatUnits(priceMin, 8) : '',
+          priceMax: priceMax ? ethers.utils.formatUnits(priceMax, 8) : ''
         }
       })
     }
@@ -42,29 +49,21 @@ const Token = ({ style }) => {
 
   return (
     <Card style={style}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}
-      >
-        <H4 style={{ margin: '0 1rem 0 0' }}>Token</H4>
-        <ButtonGroup>
-          <Button active={token === 'OUSD'} onClick={() => setToken('OUSD')}>
-            OUSD
-          </Button>
-          <Button active={token === 'DAI'} onClick={() => setToken('DAI')}>
-            DAI
-          </Button>
-          <Button active={token === 'USDC'} onClick={() => setToken('USDC')}>
-            USDC
-          </Button>
-          <Button active={token === 'USDT'} onClick={() => setToken('USDT')}>
-            USDT
-          </Button>
-        </ButtonGroup>
-      </div>
+      <H4>Token</H4>
+      <ButtonGroup>
+        <Button active={token === 'OUSD'} onClick={() => setToken('OUSD')}>
+          OUSD
+        </Button>
+        <Button active={token === 'DAI'} onClick={() => setToken('DAI')}>
+          DAI
+        </Button>
+        <Button active={token === 'USDC'} onClick={() => setToken('USDC')}>
+          USDC
+        </Button>
+        <Button active={token === 'USDT'} onClick={() => setToken('USDT')}>
+          USDT
+        </Button>
+      </ButtonGroup>
       <table style={{ marginBottom: 10, marginTop: 10 }}>
         <tbody>
           <tr>
@@ -89,12 +88,19 @@ const Token = ({ style }) => {
             <td>Total Supply</td>
             <td>{get(tokens, `${token}.totalSupply`, '')}</td>
           </tr>
+          <tr>
+            <td>Price Min</td>
+            <td>{get(tokens, `${token}.priceMin`, '')}</td>
+          </tr>
+          <tr>
+            <td>Price Max</td>
+            <td>{get(tokens, `${token}.priceMax`, '')}</td>
+          </tr>
         </tbody>
       </table>
       <div style={{ marginTop: 20 }}>
         <Transfer token={token} />
-        {/* <Button style={{ marginLeft: 10 }}>Approve</Button>
-        <Button style={{ marginLeft: 10 }}>Mint</Button> */}
+        {/* <Button style={{ marginLeft: 10 }}>Approve</Button> */}
       </div>
     </Card>
   )

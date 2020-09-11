@@ -10,9 +10,10 @@ import Address from 'components/Address'
 import Mint from './_Mint'
 import Redeem from './_Redeem'
 import RedeemAll from './_RedeemAll'
+import Rebase from './_Rebase'
 
 const Vault = () => {
-  const [{ contracts, vault, provider }, dispatch] = useStateValue()
+  const [{ contracts, vault, provider, reload }, dispatch] = useStateValue()
 
   useEffect(() => {
     async function go() {
@@ -45,7 +46,7 @@ const Vault = () => {
       })
     }
     go()
-  }, [])
+  }, [reload.vault])
 
   return (
     <Card>
@@ -135,6 +136,7 @@ const Vault = () => {
       <Mint />
       <Redeem style={{ marginLeft: 10 }} />
       <RedeemAll style={{ marginLeft: 10 }} />
+      <Rebase style={{ marginLeft: 10 }} />
     </Card>
   )
 }

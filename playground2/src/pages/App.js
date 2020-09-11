@@ -8,6 +8,7 @@ import { useStateValue } from '../state'
 import Accounts from './Accounts'
 import Vault from './vault/Vault'
 import Token from './token/Token'
+import Oracle from './oracle/Oracle'
 
 const App = () => {
   const [
@@ -54,6 +55,7 @@ const App = () => {
         <div style={{ display: 'flex', marginTop: 20 }}>
           <Vault />
           <Token style={{ marginLeft: 20 }} />
+          <Oracle style={{ marginLeft: 20 }} />
         </div>
       </div>
     </>
