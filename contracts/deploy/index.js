@@ -3,7 +3,7 @@ const {
   getAssetAddresses,
   getOracleAddress,
   getChainlinkOracleFeedAddresses,
-  isMainnetOrFork,
+  isMainnetOrFork
 } = require("../test/helpers.js");
 
 const deployCore = async ({ getNamedAccounts, deployments }) => {
@@ -76,7 +76,7 @@ const deployCore = async ({ getNamedAccounts, deployments }) => {
     .connect(sDeployer)
     .registerFeed(feedAddresses.USDC, "USDC", false);
 
-  // args to the MixOracle of 
+  // args to the MixOracle of
   // for live the bounds are 1.3 - 0.7
   // fot testing the bounds are 1.6 - 0.5
   const MaxMinDrift = isMainnetOrFork ? [13e7, 7e7] : [16e7, 5e7];
@@ -94,16 +94,6 @@ const deployCore = async ({ getNamedAccounts, deployments }) => {
   await mixOracle
     .connect(sDeployer)
     .registerTokenOracles("DAI", [chainlinkOracle.address], []);
-
-  /*
-  if (isMainnetOrFork) {
-    await deploy("OpenUniswapOracle", { from: deployerAddr,
-    args:[assetAddresses.OpenOracle, assetAddresses.ETH] });
-
-    const openUniswapOracle = await ethers.getContract("OpenUniswapOracle");
-    await openUniswapOracle.connect(sDeployer).registerPair(assetAddresses.USDCETHPair);
-  }
-   */
 
   // Initialize upgradeable contracts
   await cOUSD
