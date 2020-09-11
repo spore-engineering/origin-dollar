@@ -1,13 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import ethers from 'ethers'
+import React, { useState } from 'react'
 
-import {
-  Button,
-  Dialog,
-  FormGroup,
-  HTMLSelect,
-  InputGroup
-} from '@blueprintjs/core'
+import { Button, Dialog, FormGroup, HTMLSelect } from '@blueprintjs/core'
 
 import { useStateValue } from '../../state'
 
@@ -17,15 +10,14 @@ const RedeemAll = ({ style }) => {
   const [error, setError] = useState()
   const [loading, setLoading] = useState()
   const [open, setOpen] = useState()
-  const [{ accounts, contracts, provider, reload }, dispatch] = useStateValue()
+  const [{ accounts, contracts, provider }, dispatch] = useStateValue()
   const [account, setAccount] = useState()
-  const [amount, setAmount] = useState('')
 
   return (
     <>
       <Button
         style={style}
-        onClick={(e) => {
+        onClick={() => {
           setOpen(true)
           setAccount(accounts[0])
         }}

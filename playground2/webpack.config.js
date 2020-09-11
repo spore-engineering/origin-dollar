@@ -1,6 +1,5 @@
 const path = require('path')
 const webpack = require('webpack')
-const fs = require('fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')

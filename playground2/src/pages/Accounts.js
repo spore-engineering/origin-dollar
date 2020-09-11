@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { HTMLTable } from '@blueprintjs/core'
 
 import { useStateValue } from '../state'
@@ -25,7 +25,7 @@ const Accounts = () => {
         </tr>
       </thead>
       <tbody>
-        {accounts.map((account, idx) => (
+        {accounts.map((account) => (
           <tr key={account}>
             <td>{account}</td>
             <td>{fmt(balances.eth[account] || '')}</td>

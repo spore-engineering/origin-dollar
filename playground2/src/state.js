@@ -3,9 +3,7 @@ import ethers from 'ethers'
 
 import get from 'lodash/get'
 import set from 'lodash/set'
-import pick from 'lodash/pick'
 import cloneDeep from 'lodash/cloneDeep'
-import isEqual from 'lodash/isEqual'
 
 import network from '../../dapp/network.json'
 import IViewVault from '../../dapp/IViewVault.json'

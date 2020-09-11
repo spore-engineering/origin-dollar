@@ -1,12 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import {
-  Label,
-  Switch,
-  Button,
-  Dialog,
-  FormGroup,
-  HTMLSelect
-} from '@blueprintjs/core'
+import React, { useEffect } from 'react'
+import { Switch, Card, H4 } from '@blueprintjs/core'
 
 import { useStateValue } from '../../state'
 import { ethers } from 'ethers'
@@ -16,8 +9,7 @@ import Redeem from './_Redeem'
 import RedeemAll from './_RedeemAll'
 
 const Vault = () => {
-  const [modal, setModal] = useState()
-  const [{ accounts, contracts, vault, provider }, dispatch] = useStateValue()
+  const [{ contracts, vault, provider }, dispatch] = useStateValue()
 
   useEffect(() => {
     async function go() {
@@ -53,9 +45,9 @@ const Vault = () => {
   }, [])
 
   return (
-    <div>
-      <h4>Vault</h4>
-      <table>
+    <Card>
+      <H4>Vault</H4>
+      <table style={{ marginBottom: 10 }}>
         <tbody>
           <tr>
             <td>Address</td>
@@ -66,20 +58,20 @@ const Vault = () => {
             <td>{vault.governor}</td>
           </tr>
           <tr>
-            <td>APR</td>
-            <td>{vault.apr}</td>
+            <td>Total Value</td>
+            <td>{vault.totalValue}</td>
           </tr>
           <tr>
-            <td># Strategies</td>
-            <td>{vault.strategyCount}</td>
+            <td>APR</td>
+            <td>{vault.apr}</td>
           </tr>
           <tr>
             <td># Assets</td>
             <td>{vault.assetCount}</td>
           </tr>
           <tr>
-            <td>Total Value</td>
-            <td>{vault.totalValue}</td>
+            <td># Strategies</td>
+            <td>{vault.strategyCount}</td>
           </tr>
           <tr>
             <td>Price DAI</td>
@@ -136,7 +128,7 @@ const Vault = () => {
       <Mint />
       <Redeem style={{ marginLeft: 10 }} />
       <RedeemAll style={{ marginLeft: 10 }} />
-    </div>
+    </Card>
   )
 }
 

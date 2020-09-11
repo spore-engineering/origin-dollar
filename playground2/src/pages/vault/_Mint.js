@@ -17,7 +17,10 @@ const Mint = () => {
   const [error, setError] = useState()
   const [loading, setLoading] = useState()
   const [open, setOpen] = useState()
-  const [{ accounts, contracts, provider, reload }, dispatch] = useStateValue()
+  const [
+    { accounts, contracts, provider, reload, balances },
+    dispatch
+  ] = useStateValue()
   const [account, setAccount] = useState()
   const [asset, setAsset] = useState('DAI')
   const [amount, setAmount] = useState('')
@@ -38,7 +41,7 @@ const Mint = () => {
   return (
     <>
       <Button
-        onClick={(e) => {
+        onClick={() => {
           setOpen(true)
           setAccount(accounts[0])
         }}
@@ -68,7 +71,19 @@ const Mint = () => {
               onChange={(e) => setAmount(e.target.value)}
             />
           </FormGroup>
-          <FormGroup label="Allowance">{allowance}</FormGroup>
+          <div
+            style={{
+              display: 'inline-grid',
+              gridAutoFlow: 'column',
+              gridAutoColumns: 'auto',
+              columnGap: '1rem'
+            }}
+          >
+            <FormGroup label="Balance">
+              {balances[asset.toLowerCase()][account]}
+            </FormGroup>
+            <FormGroup label="Allowance">{allowance}</FormGroup>
+          </div>
         </div>
         <div
           className="bp3-dialog-footer"

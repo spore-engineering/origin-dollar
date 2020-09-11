@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Navbar, HTMLTable } from '@blueprintjs/core'
+import { Navbar } from '@blueprintjs/core'
 import ethers from 'ethers'
 import cloneDeep from 'lodash/cloneDeep'
 
@@ -10,7 +10,7 @@ import Vault from './vault/Vault'
 
 const App = () => {
   const [
-    { provider, accounts, balances, ousd, dai, usdc, usdt, reload },
+    { provider, balances, ousd, dai, usdc, usdt, reload },
     dispatch
   ] = useStateValue()
 
@@ -45,12 +45,14 @@ const App = () => {
     <>
       <Navbar>
         <Navbar.Group>
-          <Navbar.Heading>Nick's OUSD Playground</Navbar.Heading>
+          <Navbar.Heading>Nick&apos;s OUSD Playground</Navbar.Heading>
         </Navbar.Group>
       </Navbar>
       <div style={{ padding: 10 }}>
         <Accounts />
-        <Vault />
+        <div style={{ display: 'flex', marginTop: 20 }}>
+          <Vault />
+        </div>
       </div>
     </>
   )

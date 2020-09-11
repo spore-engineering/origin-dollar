@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import ethers from 'ethers'
 
 import {
@@ -17,7 +17,7 @@ const Redeem = ({ style }) => {
   const [error, setError] = useState()
   const [loading, setLoading] = useState()
   const [open, setOpen] = useState()
-  const [{ accounts, contracts, provider, reload }, dispatch] = useStateValue()
+  const [{ accounts, contracts, provider }, dispatch] = useStateValue()
   const [account, setAccount] = useState()
   const [amount, setAmount] = useState('')
 
@@ -25,7 +25,7 @@ const Redeem = ({ style }) => {
     <>
       <Button
         style={style}
-        onClick={(e) => {
+        onClick={() => {
           setOpen(true)
           setAccount(accounts[0])
         }}
