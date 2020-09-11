@@ -1,0 +1,104 @@
+{
+  "name": "ousd-playground2",
+  "version": "0.0.1",
+  "description": "OUSD Playground 2",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server"
+  },
+  "author": "Nick Poulden <nick@originprotocol.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.11.6",
+    "@babel/plugin-transform-flow-strip-types": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
+    "@babel/register": "^7.11.5",
+    "@blueprintjs/core": "^3.31.0",
+    "@blueprintjs/datetime": "^3.18.6",
+    "@blueprintjs/icons": "^3.20.1",
+    "@blueprintjs/table": "^3.8.13",
+    "babel-plugin-module-resolver": "^4.0.0",
+    "bootstrap": "4.5.2",
+    "ethers": "5.0.12",
+    "prettier": "^2.1.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-styl": "^0.0.3",
+    "serve-static": "^1.14.1"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ],
+    "plugins": [
+      [
+        "module-resolver",
+        {
+          "alias": {
+            "components": "./src/components",
+            "pages": "./src/pages",
+            "utils": "./src/utils",
+            "data": "./src/data"
+          }
+        }
+      ],
+      [
+        "@babel/plugin-proposal-decorators",
+        {
+          "legacy": true
+        }
+      ],
+      "@babel/plugin-proposal-export-default-from",
+      "@babel/plugin-transform-runtime",
+      "@babel/plugin-transform-destructuring",
+      "@babel/plugin-transform-object-assign",
+      "@babel/plugin-proposal-object-rest-spread",
+      "@babel/plugin-proposal-class-properties"
+    ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "7.10.4",
+    "@babel/plugin-proposal-decorators": "7.10.5",
+    "@babel/plugin-proposal-export-default-from": "7.10.4",
+    "@babel/plugin-proposal-object-rest-spread": "7.11.0",
+    "@babel/plugin-transform-destructuring": "7.10.4",
+    "@babel/plugin-transform-object-assign": "7.10.4",
+    "@babel/plugin-transform-runtime": "7.11.5",
+    "@babel/preset-env": "7.11.5",
+    "@babel/runtime": "7.11.2",
+    "babel-eslint": "10.1.0",
+    "babel-loader": "8.1.0",
+    "clean-webpack-plugin": "3.0.0",
+    "css-loader": "4.3.0",
+    "eslint": "7.8.1",
+    "eslint-plugin-babel": "5.3.1",
+    "eslint-plugin-react": "7.20.6",
+    "file-loader": "6.1.0",
+    "html-webpack-plugin": "4.4.1",
+    "ignore-loader": "0.1.2",
+    "inquirer": "7.3.3",
+    "mini-css-extract-plugin": "0.11.1",
+    "node-sass": "4.14.1",
+    "optimize-css-assets-webpack-plugin": "5.0.4",
+    "react-router-dom": "5.2.0",
+    "sass-loader": "10.0.2",
+    "style-loader": "1.2.1",
+    "terser-webpack-plugin": "4.1.0",
+    "url-loader": "4.1.0",
+    "webpack": "4.44.1",
+    "webpack-cli": "3.3.12",
+    "webpack-dev-server": "3.11.0"
+  },
+  "eslintIgnore": [
+    "docs",
+    "node_modules",
+    "public"
+  ],
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "proseWrap": "always",
+    "trailingComma": "none"
+  }
+}
