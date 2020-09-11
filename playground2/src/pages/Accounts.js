@@ -2,6 +2,7 @@ import React from 'react'
 import { HTMLTable } from '@blueprintjs/core'
 
 import { useStateValue } from '../state'
+import Address from 'components/Address'
 
 function fmt(val) {
   if (!val) return
@@ -16,7 +17,7 @@ const Accounts = () => {
     <HTMLTable condensed>
       <thead>
         <tr>
-          <th>Account Balances</th>
+          <th>Accounts</th>
           <th>Eth</th>
           <th>OUSD</th>
           <th>DAI</th>
@@ -27,7 +28,9 @@ const Accounts = () => {
       <tbody>
         {accounts.map((account) => (
           <tr key={account}>
-            <td>{account}</td>
+            <td>
+              <Address>{account}</Address>
+            </td>
             <td>{fmt(balances.eth[account] || '')}</td>
             <td>{fmt(balances.ousd[account] || '')}</td>
             <td>{fmt(balances.dai[account] || '')}</td>

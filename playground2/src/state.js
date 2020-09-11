@@ -27,6 +27,7 @@ contracts.VaultView = new ethers.Contract(
 const defaultState = {
   accounts: [],
   balances: { eth: {}, ousd: {}, dai: {}, usdt: {}, usdc: {} },
+  tokens: {},
   provider,
   contracts,
   ousd: contracts.OUSD,

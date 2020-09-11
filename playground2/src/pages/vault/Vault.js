@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react'
+import get from 'lodash/get'
 import { Switch, Card, H4 } from '@blueprintjs/core'
 
 import { useStateValue } from '../../state'
 import { ethers } from 'ethers'
+
+import Address from 'components/Address'
 
 import Mint from './_Mint'
 import Redeem from './_Redeem'
@@ -51,11 +54,15 @@ const Vault = () => {
         <tbody>
           <tr>
             <td>Address</td>
-            <td>{contracts.Vault.address}</td>
+            <td>
+              <Address>{get(contracts, 'Vault.address', '')}</Address>
+            </td>
           </tr>
           <tr>
             <td>Governer</td>
-            <td>{vault.governor}</td>
+            <td>
+              <Address>{get(vault, 'governor', '')}</Address>
+            </td>
           </tr>
           <tr>
             <td>Total Value</td>
