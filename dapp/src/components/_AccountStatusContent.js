@@ -5,6 +5,7 @@ import { fbt } from 'fbt-runtime'
 import { get } from 'lodash'
 
 import AccountStore from 'stores/AccountStore'
+import { getEtherscanHost } from 'utils/web3'
 import { isCorrectNetwork, truncateAddress, networkIdToName } from 'utils/web3'
 import { currencies } from 'constants/Contract'
 import { formatCurrency } from 'utils/math'
@@ -15,6 +16,8 @@ const AccountStatusContent = ({ className, onOpen }) => {
   const { deactivate, active, account, chainId } = web3react
   const correctNetwork = isCorrectNetwork(web3react)
   const balances = useStoreState(AccountStore, (s) => s.balances)
+  const connectorIcon = useStoreState(AccountStore, (s) => s.connectorIcon)
+  const etherscanLink = `${getEtherscanHost(web3react)}/address/${account}`
 
   return (
     <>
@@ -51,7 +54,7 @@ const AccountStatusContent = ({ className, onOpen }) => {
                 {/* TODO: do not hardcode connector image */}
                 <img
                   className="connector-image"
-                  src="/images/metamask-icon.svg"
+                  src={`/images/${connectorIcon}`}
                 />
                 <div className="d-flex flex-column">
                   <div className="address">{truncateAddress(account)}</div>
@@ -68,6 +71,14 @@ const AccountStatusContent = ({ className, onOpen }) => {
                     </div>
                   ))}
                 </div>
+                <a
+                  href={etherscanLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-auto etherscan-icon"
+                >
+                  <img src="/images/etherscan-icon.svg" />
+                </a>
               </div>
             </>
           )}
@@ -153,6 +164,17 @@ const AccountStatusContent = ({ className, onOpen }) => {
           margin-bottom: 10px;
         }
 
+        .etherscan-icon img {
+          width: 15px;
+          height: 15px;
+        }
+
+        .etherscan-icon {
+          padding: 15px;
+          margin-top: -15px;
+          margin-right: -15px;
+        }
+
         .currency {
           font-family: Lato;
           font-size: 12px;
@@ -190,6 +212,10 @@ const AccountStatusContent = ({ className, onOpen }) => {
 
           .disconnect-box {
             margin-top: auto;
+          }
+
+          .etherscan-icon {
+            margin-right: 0px;
           }
         }
       `}</style>

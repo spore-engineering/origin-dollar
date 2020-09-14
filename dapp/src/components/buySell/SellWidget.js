@@ -3,16 +3,18 @@ import { fbt } from 'fbt-runtime'
 import { useStoreState } from 'pullstate'
 import ethers from 'ethers'
 
-import { formatCurrency } from 'utils/math.js'
+import withRpcProvider from 'hoc/withRpcProvider'
+import { formatCurrency } from 'utils/math'
 import CoinWithdrawBox from 'components/buySell/CoinWithdrawBox'
+import BuySellModal from 'components/buySell/BuySellModal'
 import ContractStore from 'stores/ContractStore'
 import AccountStore from 'stores/AccountStore'
-import TimelockedButton from 'components/TimelockedButton'
-import Dropdown from 'components/Dropdown'
+import DisclaimerTooltip from 'components/buySell/DisclaimerTooltip'
 
 import mixpanel from 'utils/mixpanel'
 
 const SellWidget = ({
+  rpcProvider,
   ousdToSell,
   setOusdToSell,
   displayedOusdToSell,
@@ -24,12 +26,19 @@ const SellWidget = ({
   storeTransaction,
   storeTransactionError,
   toSellTab,
+  sellWidgetCoinSplit,
+  setSellWidgetCoinSplit,
+  sellWidgetCalculateDropdownOpen,
+  setSellWidgetCalculateDropdownOpen,
+  sellWidgetIsCalculating,
+  setSellWidgetIsCalculating,
+  sellWidgetState,
+  setSellWidgetState,
   displayedOusdBalance: displayedOusdBalanceAnimated,
 }) => {
   const sellFormHasErrors = Object.values(sellFormErrors).length > 0
   const ousdToSellNumber = parseFloat(ousdToSell) || 0
-  const [calculateDropdownOpen, setCalculateDropdownOpen] = useState(false)
-
+  const connectorIcon = useStoreState(AccountStore, (s) => s.connectorIcon)
   const ousdBalance = useStoreState(
     AccountStore,
     (s) => s.balances['ousd'] || 0
@@ -40,12 +49,16 @@ const SellWidget = ({
   )
   const {
     vault: vaultContract,
-    viewVault: viewVault,
+    viewVault,
     usdt: usdtContract,
     dai: daiContract,
     usdc: usdcContract,
     ousd: ousdContract,
   } = useStoreState(ContractStore, (s) => s.contracts || {})
+
+  const positiveCoinSplitCurrencies = sellWidgetCoinSplit
+    .filter((coinSplit) => parseFloat(coinSplit.amount) > 0)
+    .map((coinSplit) => coinSplit.coin)
 
   useEffect(() => {
     // toggle should set values that stay even when it is turned off
@@ -53,6 +66,13 @@ const SellWidget = ({
       setOusdToSellValue(displayedOusdBalanceAnimated.toString())
     }
   }, [displayedOusdBalanceAnimated])
+
+  useEffect(() => {
+    if (sellAllActive) {
+      // Note: Not animating this thing, too many contract reads.
+      calculateSplits(displayedOusdBalanceAnimated)
+    }
+  }, [sellAllActive])
 
   useEffect(() => {
     const newFormErrors = {}
@@ -67,56 +87,129 @@ const SellWidget = ({
     const valueNoCommas = value.replace(',', '')
     setOusdToSell(valueNoCommas)
     setDisplayedOusdToSell(value)
+    // can not include the `calculateSplits` call here because if would be too many contract calls
   }
 
   const onSellNow = async (e) => {
-    alert(
-      'Under construction: Contract api is yet to be finalised for redeeming.'
-    )
-
     mixpanel.track('Sell now clicked')
+    const returnedCoins = positiveCoinSplitCurrencies.join(',')
 
-    // TODO: update this function once the contract api is updated
+    const onSellSuccessfull = () => {
+      setOusdToSellValue('0')
+      calculateSplits('0')
+    }
+
+    setSellWidgetState('waiting-user')
     if (sellAllActive) {
       try {
         const result = await vaultContract.redeemAll()
-        // TODO: specify which coins were redeemed
-        storeTransaction(result, `redeem`, 'usdt,dai,usdc')
+        storeTransaction(result, `redeem`, returnedCoins)
+        setSellWidgetState('waiting-network')
+
+        const receipt = await rpcProvider.waitForTransaction(result.hash)
+        onSellSuccessfull()
       } catch (e) {
-        // TODO: specify which coins were redeemed
-        storeTransactionError(`redeem`, 'usdt,dai,usdc')
+        storeTransactionError(`redeem`, returnedCoins)
         console.error('Error selling all OUSD: ', e)
       }
     } else {
-      let contractAddress
-      const selectedSellCoin = 'dai'
-      if (selectedSellCoin === 'dai') {
-        contractAddress = daiContract.address
-      } else if (selectedSellCoin === 'usdt') {
-        contractAddress = usdtContract.address
-      } else if (selectedSellCoin === 'usdc') {
-        contractAddress = usdcContract.address
-      }
-
       try {
         const result = await vaultContract.redeem(
-          contractAddress,
           ethers.utils.parseUnits(
             ousdToSell.toString(),
             await ousdContract.decimals()
           )
         )
+        storeTransaction(result, `redeem`, returnedCoins)
+        setSellWidgetState('waiting-network')
 
-        storeTransaction(result, `redeem`, selectedSellCoin)
+        const receipt = await rpcProvider.waitForTransaction(result.hash)
+        onSellSuccessfull()
       } catch (e) {
-        storeTransactionError(`redeem`, selectedSellCoin)
+        storeTransactionError(`redeem`, returnedCoins)
         console.error('Error selling OUSD: ', e)
       }
+    }
+    setSellWidgetState('sell now')
+  }
+
+  let latestCalc
+  const calculateSplits = async (sellAmount) => {
+    // Note: Should probably use event debounce
+    const currTimestamp = Date.now()
+    latestCalc = currTimestamp
+
+    setSellWidgetIsCalculating(true)
+
+    try {
+      const assetAmounts = await viewVault.calculateRedeemOutputs(
+        ethers.utils.parseUnits(
+          sellAmount.toString(),
+          await ousdContract.decimals()
+        )
+      )
+
+      const assets = await Promise.all(
+        (await viewVault.getAllAssets()).map(async (address, index) => {
+          const contracts = ContractStore.currentState.contracts
+          const coin = Object.keys(contracts).find(
+            (coin) =>
+              contracts[coin] &&
+              contracts[coin].address.toLowerCase() === address.toLowerCase()
+          )
+
+          const amount = ethers.utils.formatUnits(
+            assetAmounts[index].toString(),
+            await contracts[coin].decimals()
+          )
+
+          return {
+            coin,
+            amount,
+          }
+        })
+      )
+
+      if (latestCalc === currTimestamp) {
+        setSellWidgetCoinSplit(assets)
+      }
+    } catch (err) {
+      console.error(err)
+      if (latestCalc === currTimestamp) {
+        setSellWidgetCoinSplit([])
+      }
+    }
+
+    if (latestCalc === currTimestamp) {
+      setSellWidgetIsCalculating(false)
     }
   }
 
   return (
     <>
+      {sellWidgetState !== 'sell now' && (
+        <BuySellModal
+          content={
+            <>
+              {sellWidgetState === 'waiting-user' && (
+                <div className="d-flex align-items-center justify-content-center">
+                  <img
+                    className="waiting-icon"
+                    src={`/images/${connectorIcon}`}
+                  />
+                  {fbt(
+                    'Waiting for you to approve...',
+                    'Waiting for you to approve...'
+                  )}
+                </div>
+              )}
+              {sellWidgetState === 'waiting-network' && (
+                <>{fbt('Selling OUSD...', 'Selling OUSD...')}</>
+              )}
+            </>
+          }
+        />
+      )}
       {ousdBalance > 0 && (
         <div className="sell-table">
           <div className="header d-flex">
@@ -151,6 +244,7 @@ const SellWidget = ({
                     const value =
                       parseFloat(e.target.value) < 0 ? '0' : e.target.value
                     setOusdToSellValue(value)
+                    calculateSplits(value)
                   }}
                   onBlur={(e) => {
                     setDisplayedOusdToSell(formatCurrency(ousdToSell, 6))
@@ -209,21 +303,14 @@ const SellWidget = ({
                 <div className="grey-text">
                   {fbt('Estimated Stablecoins', 'Estimated Stablecoins')}
                 </div>
-                <Dropdown
-                  className="dropdown d-flex flex-grow-1"
-                  content={
-                    <div
-                      id="howCalculatedPopover"
-                      className="account-status-popover"
-                    >
-                      {fbt(
-                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. In vitae vestibulum sapien. Integer sed nunc eget dolor sagittis condimentum. Praesent ultrices posuere dui, a scelerisque nibh suscipit id. ',
-                        'Lorem ipsum'
-                      )}
-                    </div>
-                  }
-                  open={calculateDropdownOpen}
-                  onClose={() => setCalculateDropdownOpen(false)}
+                <DisclaimerTooltip
+                  id="howSaleCalculatedPopover"
+                  isOpen={sellWidgetCalculateDropdownOpen}
+                  onClose={() => setSellWidgetCalculateDropdownOpen(false)}
+                  text={fbt(
+                    'The mix of stablecoins you receive from selling OUSD will depend on the current holdings of the vault contract. The amount will depend on exchange rates and will include an exit fee of 0.5% in addition to any exit fees charged by underlying vault strategies. You may receive more or less stablecoins than are shown here.',
+                    'The mix of stablecoins you receive from selling OUSD will depend on the current holdings of the vault contract. The amount will depend on exchange rates and will include an exit fee of 0.5% in addition to any exit fees charged by underlying vault strategies. You may receive more or less stablecoins than are shown here.'
+                  )}
                 >
                   <button
                     className="calculated-toggler"
@@ -231,32 +318,56 @@ const SellWidget = ({
                     aria-expanded="false"
                     aria-label="Toggle how it is calculated popover"
                     onClick={(e) => {
-                      setCalculateDropdownOpen(!calculateDropdownOpen)
+                      setSellWidgetCalculateDropdownOpen(
+                        !sellWidgetCalculateDropdownOpen
+                      )
                     }}
                   >
                     {fbt('How is this calculated?', 'HowCalculated')}
                   </button>
-                </Dropdown>
+                </DisclaimerTooltip>
               </div>
               <div className="withdraw-section d-flex justify-content-center">
-                {/* TODO: specify which coins are going to be handed out */}
-                {['usdt', 'dai', 'usdc'].map((coin) => {
-                  return (
-                    <CoinWithdrawBox
-                      key={coin}
-                      coin={coin}
-                      exchangeRate={ousdExchangeRates[coin]}
-                      amount={1234}
-                    />
-                  )
-                })}
+                {sellWidgetIsCalculating
+                  ? positiveCoinSplitCurrencies.map((coin) => (
+                      <CoinWithdrawBox
+                        key={coin}
+                        coin={coin}
+                        exchangeRate={ousdExchangeRates[coin]}
+                        loading
+                      />
+                    ))
+                  : positiveCoinSplitCurrencies
+                      .sort((coin) => {
+                        switch (coin) {
+                          case 'usdt':
+                            return -1
+                          case 'dai':
+                            return 0
+                          case 'usdc':
+                            return 1
+                        }
+                      })
+                      .map((coin) => {
+                        const amount = sellWidgetCoinSplit.filter(
+                          (coinSplit) => coinSplit.coin === coin
+                        )[0].amount
+                        return (
+                          <CoinWithdrawBox
+                            key={coin}
+                            coin={coin}
+                            exchangeRate={ousdExchangeRates[coin]}
+                            amount={amount}
+                          />
+                        )
+                      })}
               </div>
             </>
           )}
           <div className="actions d-flex flex-md-row flex-column justify-content-center justify-content-md-between">
             <div>
               {Object.values(sellFormErrors).length > 0 && (
-                <div className="error-box d-flex align-items-center justify-content-center">
+                <div className="error-box d-flex align-items-center justify-content-center mb-4 mb-md-0">
                   {fbt(
                     'You don’t have enough ' +
                       fbt.param(
@@ -268,12 +379,17 @@ const SellWidget = ({
                 </div>
               )}
             </div>
-            <TimelockedButton
-              disabled={sellFormHasErrors || !ousdToSell}
+            <button
+              disabled={
+                sellFormHasErrors ||
+                !ousdToSell ||
+                sellWidgetState !== 'sell now'
+              }
               className="btn-blue"
               onClick={onSellNow}
-              text={fbt('Sell now', 'Sell now')}
-            />
+            >
+              {fbt('Buy OUSD', 'Buy OUSD')}
+            </button>
           </div>
         </div>
       )}
@@ -506,6 +622,10 @@ const SellWidget = ({
           color: #8293a4;
         }
 
+        .calculated-holder {
+          margin-bottom: 11px;
+        }
+
         .calculated-toggler {
           font-family: Lato;
           font-size: 12px;
@@ -515,22 +635,10 @@ const SellWidget = ({
           background-color: transparent;
         }
 
-        .calculated-holder {
-          margin-bottom: 11px;
-        }
-
-        #howCalculatedPopover {
-          position: absolute;
-          padding: 22px 29px;
-          right: 0px;
-          width: 280px;
-          border-radius: 10px;
-          box-shadow: 0 0 34px 0 rgba(24, 49, 64, 0.2);
-          border: solid 1px #cdd7e0;
-          background-color: #ffffff;
-          font-size: 14px;
-          line-height: 1.36;
-          color: #183140;
+        .waiting-icon {
+          width: 30px;
+          height: 30px;
+          margin-right: 10px;
         }
 
         @media (max-width: 799px) {
@@ -545,10 +653,6 @@ const SellWidget = ({
             min-height: 159px;
             height: 159px;
             padding: 30px;
-          }
-
-          #howCalculatedPopover {
-            top: 135%;
           }
 
           .ousd-estimation .estimation-image-holder {
@@ -582,4 +686,4 @@ const SellWidget = ({
   )
 }
 
-export default SellWidget
+export default withRpcProvider(SellWidget)
