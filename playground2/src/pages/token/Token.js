@@ -9,7 +9,7 @@ import { useStateValue } from '../../state'
 import Transfer from './_Transfer'
 
 const Token = ({ style }) => {
-  const [{ contracts, tokens }, dispatch] = useStateValue()
+  const [{ contracts, tokens, reload }, dispatch] = useStateValue()
   const [token, setToken] = useState('OUSD')
 
   useEffect(() => {
@@ -42,10 +42,8 @@ const Token = ({ style }) => {
         }
       })
     }
-    if (!tokens[token]) {
-      go()
-    }
-  }, [token])
+    go()
+  }, [token, reload.token])
 
   return (
     <Card style={style}>

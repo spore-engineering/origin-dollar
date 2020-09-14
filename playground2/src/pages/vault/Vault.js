@@ -11,6 +11,7 @@ import Mint from './_Mint'
 import Redeem from './_Redeem'
 import RedeemAll from './_RedeemAll'
 import Rebase from './_Rebase'
+import AddStrategy from './_AddStrategy'
 
 const Vault = () => {
   const [{ contracts, vault, provider, reload }, dispatch] = useStateValue()
@@ -136,7 +137,10 @@ const Vault = () => {
       <Mint />
       <Redeem style={{ marginLeft: 10 }} />
       <RedeemAll style={{ marginLeft: 10 }} />
-      <Rebase style={{ marginLeft: 10 }} />
+      <div style={{ marginTop: 10 }}>
+        <Rebase />
+        <AddStrategy style={{ marginLeft: 10 }} />
+      </div>
     </Card>
   )
 }

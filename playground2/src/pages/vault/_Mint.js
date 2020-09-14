@@ -137,6 +137,7 @@ const Mint = () => {
                 .then(() => {
                   setOpen(false)
                   dispatch({ type: 'reload', target: 'accounts' })
+                  dispatch({ type: 'reload', target: 'vault' })
                 })
                 .catch((err) => {
                   try {

@@ -24,7 +24,7 @@ const SetPrice = ({ style, token }) => {
       >
         Set Price
       </Button>
-      <Dialog title="Redeem" isOpen={open} onClose={() => setOpen(false)}>
+      <Dialog title="Set Price" isOpen={open} onClose={() => setOpen(false)}>
         <div className="bp3-dialog-body">
           <ErrorCallout error={error} />
           <FormGroup label="Amount in USD">
@@ -39,7 +39,7 @@ const SetPrice = ({ style, token }) => {
           style={{ display: 'flex', justifyContent: 'flex-end' }}
         >
           <Button
-            text="Redeem"
+            text="Set Price"
             intent="primary"
             loading={loading}
             style={{ marginLeft: 10 }}
@@ -53,6 +53,7 @@ const SetPrice = ({ style, token }) => {
                   setOpen(false)
                   dispatch({ type: 'reload', target: 'oracle' })
                   dispatch({ type: 'reload', target: 'vault' })
+                  dispatch({ type: 'reload', target: 'token' })
                 })
                 .catch((err) => {
                   try {

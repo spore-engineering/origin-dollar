@@ -5,21 +5,21 @@ import {
   Button,
   Dialog,
   FormGroup,
-  HTMLSelect,
-  InputGroup
+  InputGroup,
+  HTMLSelect
 } from '@blueprintjs/core'
 
 import { useStateValue } from '../../state'
 
 import ErrorCallout from 'components/ErrorCallout'
 
-const Redeem = ({ style }) => {
+const AddStrategy = ({ style }) => {
   const [error, setError] = useState()
   const [loading, setLoading] = useState()
   const [open, setOpen] = useState()
-  const [{ accounts, contracts, provider }, dispatch] = useStateValue()
-  const [account, setAccount] = useState()
-  const [amount, setAmount] = useState('')
+  const [weight, setWeight] = useState('100')
+  const [{ contracts, provider, vault }, dispatch] = useStateValue()
+  const [strategy, setStrategy] = useState(contracts.CompoundStrategy.address)
 
   return (
     <>
@@ -27,25 +27,24 @@ const Redeem = ({ style }) => {
         style={style}
         onClick={() => {
           setOpen(true)
-          setAccount(accounts[0])
         }}
       >
-        Redeem
+        Add Strategy
       </Button>
-      <Dialog title="Redeem" isOpen={open} onClose={() => setOpen(false)}>
+      <Dialog title="Add Strategy" isOpen={open} onClose={() => setOpen(false)}>
         <div className="bp3-dialog-body">
           <ErrorCallout error={error} />
-          <FormGroup label="Account">
+          <FormGroup label="Strategy">
             <HTMLSelect
-              value={account}
-              onChange={(e) => setAccount(e.target.value)}
-              options={accounts}
+              value={strategy}
+              onChange={(e) => setStrategy(e.target.value)}
+              options={[{ label: 'Compound', value: '' }]}
             />
           </FormGroup>
-          <FormGroup label="Amount">
+          <FormGroup label="Weight">
             <InputGroup
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
             />
           </FormGroup>
         </div>
@@ -54,18 +53,17 @@ const Redeem = ({ style }) => {
           style={{ display: 'flex', justifyContent: 'flex-end' }}
         >
           <Button
-            text="Redeem"
+            text="Add Strategy"
             intent="primary"
             loading={loading}
             style={{ marginLeft: 10 }}
             onClick={async () => {
               setLoading(true)
-              const signer = provider.getSigner(account)
+              const signer = provider.getSigner(vault.governor)
               contracts.Vault.connect(signer)
-                .redeem(ethers.utils.parseEther(amount))
+                .addStrategy(strategy, weight)
                 .then(() => {
                   setOpen(false)
-                  dispatch({ type: 'reload', target: 'accounts' })
                   dispatch({ type: 'reload', target: 'vault' })
                 })
                 .catch((err) => {
@@ -86,4 +84,4 @@ const Redeem = ({ style }) => {
   )
 }
 
-export default Redeem
+export default AddStrategy
