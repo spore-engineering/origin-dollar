@@ -5,6 +5,9 @@ const {
   advanceTime,
   proposeArgs
 } = require("./helpers");
+const { utils } = require("ethers");
+
+const UNISWAP_PAIR_FOR_HOOK = "0xcc01d9d54d06b6a0b6d09a9f79c3a6438e505f71";
 
 async function proposeAndExecute(fixture, governorArgsArray, description) {
   const {governorContract, governor, anna} = fixture;
@@ -177,17 +180,22 @@ describe("Can claim governance with Governor contract and govern", () => {
 
   it.only("Should be able govern from multisig", async () => {
     const fixture = await loadFixture(defaultFixture);
-    const {minuteTimelock, vault, governor, governorContract, anna} = fixture;
+    const {minuteTimelock, vault, governor, governorContract, anna, rebaseHooks} = fixture;
 
     const cMockMultiSig = await ethers.getContract("MockMultiSig");
 
     //transfer governance
     await vault.connect(governor).transferGovernance(minuteTimelock.address);
+    await rebaseHooks.transferGovernance(minuteTimelock.address);
 
     const data = await callData({contract:governorContract, 
       signature:'proposeAndQueue(address[],uint256[],string[],bytes[],string)',  
       args:[...await proposeArgs([ { 
           contract:vault, 
+          signature:"claimGovernance()"
+        },
+        { 
+          contract:rebaseHooks, 
           signature:"claimGovernance()"
         },
         {
@@ -198,7 +206,13 @@ describe("Can claim governance with Governor contract and govern", () => {
           contract:vault,
           signature:"setRedeemFeeBps(uint256)",
           args:[69]
-        }]), "Accept admin for the vault and set pauseDeposits and Redeem!"]});
+        },
+        {
+          contract:rebaseHooks,
+          signature: "setUniswapPairs(address[])",
+          args: [[UNISWAP_PAIR_FOR_HOOK]]
+        }
+      ]), "Accept admin for the vault and set pauseDeposits and Redeem!"]});
 
     console.log("Data passed to the multisig is:", data);
     await cMockMultiSig.submitTransaction(governorContract.address, 0, data);
@@ -215,6 +229,7 @@ describe("Can claim governance with Governor contract and govern", () => {
     expect(await vault.redeemFeeBps()).to.be.equal(69);
 
     expect(await (await ethers.getContractAt("Governable", vault.address)).governor()).to.be.equal(minuteTimelock.address);
+    expect(await rebaseHooks.uniswapPairs(0)).to.be.equal(utils.getAddress(UNISWAP_PAIR_FOR_HOOK));
   });
 
 });
