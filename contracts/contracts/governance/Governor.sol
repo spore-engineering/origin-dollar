@@ -70,10 +70,11 @@ contract Governor {
         bytes[] memory calldatas,
         string memory description
     ) public returns (uint256) {
+        /*
         require(
             msg.sender == guardian,
             "Governor::proposeAndQueue: sender must be gov guardian"
-        );
+        );*/
         require(
             targets.length == values.length &&
                 targets.length == signatures.length &&

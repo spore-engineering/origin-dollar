@@ -14,6 +14,7 @@ const deployMocks = async ({ getNamedAccounts, deployments }) => {
     "MockDAI",
     "MockNonStandardToken",
     "MockWETH",
+    "MockMultiSig"
   ];
   for (const contract of assetContracts) {
     await deploy(contract, { from: deployerAddr });

@@ -17,6 +17,11 @@ async function proposeAndExecute(fixture, governorArgsArray, description) {
   await governorContract.connect(anna).execute(proposalId);
 }
 
+async function callData({ contract, signature, args=[]}) {
+  const method = signature.split("(")[0];
+  const tx = await contract.populateTransaction[method](...args);
+  return tx.data
+}
 
 describe("Can claim governance with Governor contract and govern", () => {
 
@@ -146,6 +151,7 @@ describe("Can claim governance with Governor contract and govern", () => {
     const fixture = await loadFixture(defaultFixture);
     const {minuteTimelock, vault, governor} = fixture;
 
+
     //transfer governance
     await vault.connect(governor).transferGovernance(minuteTimelock.address);
 
@@ -168,4 +174,47 @@ describe("Can claim governance with Governor contract and govern", () => {
     // verify that we transfer the governance back
     expect(await (await ethers.getContractAt("Governable", vault.address)).governor()).to.be.equal(governor._address);
   });
+
+  it.only("Should be able govern from multisig", async () => {
+    const fixture = await loadFixture(defaultFixture);
+    const {minuteTimelock, vault, governor, governorContract, anna} = fixture;
+
+    const cMockMultiSig = await ethers.getContract("MockMultiSig");
+
+    //transfer governance
+    await vault.connect(governor).transferGovernance(minuteTimelock.address);
+
+    const data = await callData({contract:governorContract, 
+      signature:'proposeAndQueue(address[],uint256[],string[],bytes[],string)',  
+      args:[...await proposeArgs([ { 
+          contract:vault, 
+          signature:"claimGovernance()"
+        },
+        {
+          contract:vault,
+          signature:"pauseDeposits()"
+        },
+        {
+          contract:vault,
+          signature:"setRedeemFeeBps(uint256)",
+          args:[69]
+        }]), "Accept admin for the vault and set pauseDeposits and Redeem!"]});
+
+    console.log("Data passed to the multisig is:", data);
+    await cMockMultiSig.submitTransaction(governorContract.address, 0, data);
+    const lastProposalId = await governorContract.proposalCount();
+    // it's always 1
+    await cMockMultiSig.executeTransaction(1);
+    const proposalId = await governorContract.proposalCount();
+    expect(proposalId).not.to.be.equal(lastProposalId);
+    // go forward a minute and a second
+    advanceTime(61);
+    await governorContract.connect(anna).execute(proposalId);
+
+    expect(await vault.depositPaused()).to.be.true;
+    expect(await vault.redeemFeeBps()).to.be.equal(69);
+
+    expect(await (await ethers.getContractAt("Governable", vault.address)).governor()).to.be.equal(minuteTimelock.address);
+  });
+
 });
