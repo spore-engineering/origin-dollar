@@ -212,8 +212,6 @@ const main = async () => {
 
     const yield = (yieldTotal / firstBlockTotal) * timeProportion * 100;
 
-    console.log("Block number", log.blockNumber);
-    console.log("First seen block total:", displayCurrency(firstBlockTotal));
     console.log("Yield since first seen block:", displayCurrency(yieldTotal));
     console.log(`APY ${yield.toFixed(2)}%`);
   }
